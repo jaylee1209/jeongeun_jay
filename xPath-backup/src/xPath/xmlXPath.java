@@ -28,6 +28,20 @@ import org.xml.sax.SAXException;
 
 public class xmlXPath {
 	
+	/**
+	 * 해당 메소드는 5가지 일을 수행한다
+	 * 1. F로 시작되는 xml 파일에서 SIMILAR_RATE 를 100으로 나누었을 때의 값이 15이상인것을찾는다.
+	 * 2. P로 시작되는 xml 파일에서 ROW에 대한 정보를 모두 추출한다.
+	 * 3. 파일의 경로를 지정해주고, 해당 폴더가 존재하지않으면은 생성하고 그렇지않으면은 이미 폴더가 있다는 메세지 출력
+	 * 4. PID의 content를 찾아 key로 할당하고 ROW태그 전체를 value 로 할당한다.
+	 * 5. P파일에서 PID를 찾고 하위 노드에 LICENSE 번호를 가져와 COMMENT태그에 쓴다
+	 * 6. 작업이 끝나면은 파일을 생성해준다.
+	 * 
+	 * 해당 작업이 끝날 때마다 T로 시작되는 파일로 생성한다.
+	 * 
+	 * @param array
+	 * @return
+	 */
 	public String[] searchSR(int[] array) {
 		System.out.println("SERVICE RATE 가지고 오자" + Arrays.toString(array));
 		String arraypid[] = new String[146];		//146
@@ -38,25 +52,45 @@ public class xmlXPath {
 		         Document doc1 = null;
 		         XPath xp = XPathFactory.newInstance().newXPath();
 		         
+		         //3
+		         String path = "C:\\Users\\meta\\jeongeun_jay\\xPath-backup\\src\\data\\test";
+		         File Folder = new File(path);
+		         
+		         if(!Folder.exists()) {
+		        	 try {
+						Folder.mkdir();
+						 System.out.println("폴더가 생성되었습니다.");
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		         } else {
+		        	 System.out.println("이미 폴더가 있습니다.");
+		         }
+		         //end of 3
+		         
 		         for(int i=0; i<array.length; i++) {
 		        	 doc = db.parse("src\\data\\F_"+array[i]+"_TB.xml");
 		        	 doc1 = db.parse("src\\data\\P_"+array[i]+"_TB.xml");
-		        	 
-//		        	 System.out.println("doc의 갑" + doc.getDocumentURI());
-//		        	 System.out.println("doc1의 값" + doc1.getDocumentURI());
-		        	 
+		        	 		        	 
+		        	 //1
 			         NodeList nl = (NodeList) xp.compile("//ROWS/ROW[SIMILAR_RATE div 100 > 15]").evaluate(doc, XPathConstants.NODESET);
-//			         System.out.println("노드의 길이는? " +nl.getLength());
+			         //end of 1
 			         
+			         //2
 			         NodeList nl1 = (NodeList) xp.compile("//ROWS/ROW").evaluate(doc1, XPathConstants.NODESET);
+			         //end of 2
 			         
 			         Map<String, Node> pmap = new HashMap<String, Node>(); 
 			         
+			         //4
 			         for(int k=0; k<nl1.getLength(); k++) {
 			        	 Node xpnode = getNodeByTagName(nl1.item(k),"P_ID");
 			        	 pmap.put(xpnode.getTextContent(), nl1.item(k));
 			         }
+			         //end of 4
 			         
+			         //5
 			         for(int j=0; j<nl.getLength(); j++) {
 			        	 Node xpnode = getNodeByTagName(nl.item(j),"P_ID");
 			        	 
@@ -67,13 +101,13 @@ public class xmlXPath {
 				        	 comment.setTextContent(nodeLIC.getTextContent());
 			        	 }
 			         }
-			        
+			         //end of 5
 			         
+			         //6
 			         DOMSource xmlDOM = new DOMSource(doc);
 			         StreamResult xmlFile = new StreamResult(new File("src\\data\\test\\T_"+array[i]+"_TB.xml"));
 			         TransformerFactory.newInstance().newTransformer().transform(xmlDOM, xmlFile);
-			         
-			         
+			         //end of 6
 		         }
 		         
 		  	  } catch (ParserConfigurationException | SAXException | IOException | XPathExpressionException | TransformerException | TransformerFactoryConfigurationError e) {
@@ -87,7 +121,6 @@ public class xmlXPath {
 	public int[] searchBF() {
 		String val = "";
 		int[] array = new int[112];
-		
 		
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -120,6 +153,7 @@ public class xmlXPath {
 		return array;
 	}
 	
+	//태그의 이름을 사용하여 노드찾기
 	public Node getNodeByTagName(Node parent, String tagName)
 	{
 		Node result = null;
