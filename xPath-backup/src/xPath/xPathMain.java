@@ -20,7 +20,9 @@ import org.xml.sax.SAXException;
 public class xPathMain {
 
 	public static void main(String[] args) {
+		Runtime.getRuntime().gc();
 		
+		long used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 		long start = System.currentTimeMillis();
 		
 		
@@ -33,7 +35,7 @@ public class xPathMain {
 		long end = System.currentTimeMillis();
 		System.out.print("끝난시간!:");
 		System.out.println((end - start)/1000.0 + "초");
-		
+		System.out.println("used memory is " + used + " bytes");
 		
 	}
 
