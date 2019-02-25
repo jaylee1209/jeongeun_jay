@@ -4,10 +4,13 @@ import java.io.BufferedWriter;
 import java.io.Externalizable;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -84,7 +87,10 @@ public class Log {
 	/**
 	 * 과제 2에서 데이터를 정제하기 위한 메소드
 	 * 
+	 * 정규식을 포함하고 있는 줄을 찾고 map 의 key값이 존재하지 않는다면은 
 	 * 시작시간, 끝나는 시간, contentlength 를 가져와서 DTO 에 담아준다.
+	 * 
+	 * 그렇지 않으면은 DTO에 값을 넣어준다.
 	 * 
 	 * @param split2string
 	 * @return
@@ -140,7 +146,7 @@ public class Log {
 	private void write2(List<String> result) {
 		try {
 		File file = new File("C:\\Users\\meta\\Desktop\\log2.txt");
-		BufferedWriter bufferedwriter = new BufferedWriter(new FileWriter(file));
+		BufferedWriter bufferedwriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
 		
 			if(file.isFile() && file.canWrite()) {
 				
@@ -181,9 +187,7 @@ public class Log {
 			
 			if( Integer.parseInt(map.get(i).getContent()) < min ) {
 				min = Integer.parseInt(map.get(i).getContent());
-			}
-			
-			if( Integer.parseInt(map.get(i).getContent()) > max ) {
+			} else if( Integer.parseInt(map.get(i).getContent()) > max ) {
 				max = Integer.parseInt(map.get(i).getContent());
 			}
 		}
@@ -228,9 +232,7 @@ public class Log {
 					
 					if(difference < min) {
 						min = difference;
-					} 
-					
-					if(difference > max) {
+					} else if (difference > max) {
 						max = difference;
 					}
 					
@@ -303,7 +305,7 @@ public class Log {
 	private void write(StringBuffer sb) {
 		try {
 		File file = new File("C:\\Users\\meta\\Desktop\\log.txt");
-		BufferedWriter bufferedwriter = new BufferedWriter(new FileWriter(file));
+		BufferedWriter bufferedwriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
 		
 			if(file.isFile() && file.canWrite()) {
 				
@@ -322,8 +324,9 @@ public class Log {
 	
 	/**
 	 * 정규식 표현을 사용한 데이터 정제 메소드
-	 * 정규식 표현과 일치되는 값들을 찾으면은 DTO에 저장한 뒤
-	 * StringBuffer 에 담아준다.
+	 * 
+	 * 줄을 읽으며 bean start라는 단어가 존재하는 단어를 찾으면  map을 생성해준다.
+	 * 그렇지 않으면 찾으려하는 키워드 값을 찾을 때 존재하는 key값에 value로 데이터를 넣어준다.
 	 * 
 	 * @param splitstring
 	 * @return
@@ -396,10 +399,12 @@ public class Log {
 				//thread와 같은 키를 존재 && esb_tran_id 찾고 && start가 null이 아닌것
 				if(map.containsKey(threadmatcher.group(1)) && esbmatcher.find() && map.get(threadmatcher.group(1)).getStart() != null) {
 		            map.get(threadmatcher.group(1)).setEsb_tran_id(esbmatcher.group(1));
-		            //thread와 같은 키존재 && content 찾음
+		            
+		            //thread와 같은 키존재 && content라는 키워드를 찾으면 실행되는 else if
 				} else if(map.containsKey(threadmatcher.group(1)) && contentmatcher.find()) {
-//						System.out.println(contentmatcher.group(1));
 						map.get(threadmatcher.group(1)).setContent_length(contentmatcher.group(1));
+				
+					//thread를 찾거나 task 1,2,3,4 (Marshalling 관련 키워드) 를 찾으면 실행되는 else if
 				} else if(map.containsKey(threadmatcher.group(1)) && task1matcher.find() && task2matcher.find() && task3matcher.find() && task4matcher.find()) {
 					String task1string = recstring.substring(recstring.indexOf("1. Before Marshalling")-13, recstring.indexOf("1. Before Marshalling")-8);
 					String task2string = recstring.substring(recstring.indexOf("2. Marshalling")-13, recstring.indexOf("2. Marshalling")-8);
@@ -410,8 +415,12 @@ public class Log {
 			        map.get(threadmatcher.group(1)).setMarshalling(task2string);
 			        map.get(threadmatcher.group(1)).setInvoke_galileo(task3string);
 		            map.get(threadmatcher.group(1)).setUnmarshalling(task4string);
+		            
+		            //map에 키가 존재하거나 calltime 이라는 키워드가 존재할 때 실행되는 else if
 				} else if(map.containsKey(threadmatcher.group(1)) && calltimematcher.find()) {
 					map.get(threadmatcher.group(1)).setCall_time(calltimematcher.group(1));
+					
+					//key가 존재하는 
 				} else if(map.keySet().contains(threadmatcher.group(1)) && endmatcher.find()) {
 					timematcher.find();
 					map.get(threadmatcher.group(1)).setEnd(timematcher.group(1));
